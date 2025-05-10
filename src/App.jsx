@@ -1,10 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "remixicon/fonts/remixicon.css";
 
 function App() {
-  let [showContent, setShowContent] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+  const audioRef = useRef(null);
+
+  // Play random song on load and stop after 20 seconds
+  useEffect(() => {
+    const songs = ["/music/song1.mp3", "/music/song2.mp3"];
+    const randomSong = songs[Math.floor(Math.random() * songs.length)];
+
+    if (audioRef.current) {
+      const audio = audioRef.current;
+      audio.src = randomSong;
+      audio.volume = 0.5;
+      audio.load(); // force load new song
+
+      // Attempt autoplay first (muted)
+      audio.muted = true;
+      audio
+        .play()
+        .then(() => {
+          // If autoplay works, unmute
+          audio.muted = false;
+        })
+        .catch(() => {
+          // Fallback: Wait for user interaction to start audio
+          const handleUserInteraction = () => {
+            audio.play();
+            audio.muted = false; // Unmute audio on user interaction
+            document.removeEventListener("click", handleUserInteraction);
+          };
+          document.addEventListener("click", handleUserInteraction);
+        });
+
+      // Stop music after 20 seconds
+      setTimeout(() => {
+        if (audio.paused === false) {
+          audio.pause();
+        }
+      }, 20000); // 20 seconds
+    }
+  }, []);
+
   useGSAP(() => {
     const tl = gsap.timeline();
 
@@ -93,6 +133,10 @@ function App() {
 
   return (
     <>
+      {/* Background Music */}
+      <audio ref={audioRef} autoPlay loop />
+
+      {/* SVG Intro Animation */}
       <div className="svg flex items-center justify-center fixed top-0 left-0 z-[100] w-full h-screen overflow-hidden bg-[#000]">
         <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
           <defs>
@@ -122,6 +166,8 @@ function App() {
           />
         </svg>
       </div>
+
+      {/* Main Content */}
       {showContent && (
         <div className="main w-full rotate-[-10deg] scale-[1.7]">
           <div className="landing overflow-hidden relative w-full h-screen bg-black">
@@ -155,7 +201,7 @@ function App() {
                 <h1 className="text-[12rem] leading-none -ml-40">auto</h1>
               </div>
               <img
-                className="absolute character -bottom-[150%] left-1/2 -translate-x-1/2  scale-[3] rotate-[-20deg]"
+                className="absolute character -bottom-[150%] left-1/2 -translate-x-1/2 scale-[3] rotate-[-20deg]"
                 src="./girlbg.png"
                 alt=""
               />
@@ -175,17 +221,17 @@ function App() {
             </div>
           </div>
           <div className="w-full h-screen flex items-center justify-center bg-black">
-            <div className="cntnr flex text-white w-full h-[80%] ">
-              <div className="limg relative w-1/2 h-full">
+            <div className="cntnr flex text-white w-full h-[80%] flex-col md:flex-row">
+              <div className="limg relative w-full md:w-1/2 h-full">
                 <img
                   className="absolute scale-[1.3] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                   src="./imag.png"
                   alt=""
                 />
               </div>
-              <div className="rg w-[30%] py-30">
-                <h1 className="text-8xl">Still Running,</h1>
-                <h1 className="text-8xl">Not Hunting</h1>
+              <div className="rg w-full md:w-[30%] py-30 px-10">
+                <h1 className="text-5xl md:text-8xl">Still Running,</h1>
+                <h1 className="text-5xl md:text-8xl">Not Hunting</h1>
                 <p className="mt-10 text-xl font-[Helvetica_Now_Display]">
                   Lorem ipsum, dolor sit amet consectetur adipisicing elit.
                   Distinctio possimus, asperiores nam, omnis inventore nesciunt
